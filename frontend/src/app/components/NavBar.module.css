@@ -1,0 +1,63 @@
+
+.navbar {
+    background-color: #133429 !important; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  object-fit: contain;
+}
+
+.menu {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;  
+    background-color: #133429 !important; 
+
+  }
+  
+  /* Wrap :global inside a local class */
+  .menu :global(.ant-menu) {
+    background-color: #133429 !important;
+  }
+  
+  .menu :global(.ant-menu-item) {
+    color: white !important;
+  }
+  
+  .menu :global(.ant-menu-item:hover) {
+    background-color: #14523D !important;
+  }
+  .menu :global(.ant-menu-item-selected) {
+    background-color: #14523D !important; 
+    color: white !important; 
+  }
+
+.profileContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.authButton {
+    margin-left: 10px;
+    background-color: #14523D !important;
+    color: white !important;  
+    border: none;  
+    padding: 10px 15px;  
+    cursor: pointer;  
+    box-shadow: none !important;  
+  }
+  
+  .authButton:hover {
+    background-color: #062b14 !important; 
+    
+  }
