@@ -2,54 +2,57 @@
 
 import React from "react";
 import Image from "next/image";
-import { Layout, Menu, Avatar, Button } from "antd";
-import { UserOutlined } from "@ant-design/icons";
-import styles from "./Navbar.module.css";
-
-const { Header } = Layout;
+import { useRouter } from "next/navigation"; // Import useRouter
+import { AppBar, Toolbar, Button, Avatar, Menu, MenuItem, Typography, Box, IconButton } from "@mui/material";
+import { AccountCircle } from "@mui/icons-material";
 
 const Navbar = () => {
-  const menuItems = [
-    { key: "1", label: "Home" },
-    { key: "2", label: "About Us" },
-    { key: "3", label: "Contact Us" },
-  ];
+  const router = useRouter(); // Initialize useRouter
+  const menuItems = ["Home", "About Us", "Contact Us"];
+
+  const handleNavigation = (item) => {
+    if (item === "Home") {
+      router.push("/home"); // Navigate to the home page
+    }
+    // Add navigation logic for other menu items if needed
+  };
 
   return (
-    <Header className={styles.navbar}>
-      {/* Left Side - Logo */}
-      <div className={styles.logoContainer}>
-        <Image
-          src="/images/logo.png"
-          alt="Logo"
-          width={150} 
-          height={50} 
-          priority
-          className={styles.logo}
-        />
-      </div>
-
-      {/* Center - Navigation Links */}
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        defaultSelectedKeys={["1"]}
-        className={styles.menu}
-        items={menuItems}
-      />
-
-      {/* Right Side - Profile/Login Buttons */}
-      <div className={styles.profileContainer}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#133429" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         
-        <Button type="primary" className={styles.authButton}>
-          Login
-        </Button>
-        <Button type="default" className={styles.authButton}>
-          Sign Up
-        </Button>
-        <Avatar size="large" icon={<UserOutlined />} />
-      </div>
-    </Header>
+        {/* Left Side - Logo */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Image src="/images/logo.png" alt="Logo" width={150} height={50} priority />
+        </Box>
+
+        {/* Center - Navigation Links */}
+        <Box sx={{ display: "flex", gap: 3 }}>
+          {menuItems.map((item, index) => (
+            <Button
+              key={index}
+              onClick={() => handleNavigation(item)} // Add onClick handler
+              sx={{ color: "white", fontSize: "16px", "&:hover": { color: "#62f3c5" } }}
+            >
+              {item}
+            </Button>
+          ))}
+        </Box>
+
+        {/* Right Side - Profile/Login Buttons */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button variant="contained" sx={{ backgroundColor: "#14523D", "&:hover": { backgroundColor: "#062b14" } }}>
+            Login
+          </Button>
+          <Button variant="outlined" sx={{ borderColor: "white", color: "white", "&:hover": { backgroundColor: "#14523D" } }}>
+            Sign Up
+          </Button>
+          <IconButton sx={{ color: "white" }}>
+            <AccountCircle fontSize="large" />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 
