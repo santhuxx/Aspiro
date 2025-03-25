@@ -17,21 +17,23 @@ const Calendar = ({ onDateSelect, onAddTaskClick }) => {
   };
 
   return (
-    <Box sx={{ mb: 4, p: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+    <Box sx={{ mb: 4, p: 2, border: '1px solid #ddd', borderRadius: 2, backgroundColor: 'white' }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Select a Date</Typography>
+          <Typography variant="h6" sx={{ color: '#14523D' }}>Select a Date</Typography> {/* Dark green color */}
           <IconButton 
             color="primary" 
             onClick={() => onAddTaskClick(selectedDate)}
             aria-label="add task"
+            sx={{ color: '#14523D' }}
           >
-            <AddCircleOutlineIcon fontSize="large" />
+            <AddCircleOutlineIcon fontSize="large" sx={{ color: '#14523D' }}/>
           </IconButton>
         </Box>
         <DateCalendar 
           value={selectedDate}
           onChange={handleDateChange}
+          sx={{ color: '#14523D' }} // Dark green color
         />
       </LocalizationProvider>
     </Box>

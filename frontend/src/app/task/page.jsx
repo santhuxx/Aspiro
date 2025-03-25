@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -63,44 +62,46 @@ const TaskPage = () => {
   );
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ mt: 5 }}>
-        <NavBar />
-        <SideMenu />
-        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
-          Task Management
-        </Typography>
-        
-        <Calendar 
-          onDateSelect={handleDateSelect} 
-          onAddTaskClick={handleAddTaskClick} 
-        />
-        
-        <TaskForm
-          open={isTaskFormOpen}
-          onClose={() => setIsTaskFormOpen(false)}
-          onSubmit={handleTaskSubmit}
-          selectedDate={selectedDate}
-        />
-        
-        <TaskList
-          tasks={filteredTasks}
-          onTaskToggle={handleTaskToggle}
-          onTaskDelete={handleTaskDelete}
-          title="Pending Tasks"
-          emptyMessage="No tasks for this date. Click the + button to add one."
-        />
-        
-        <TaskList
-          tasks={filteredCompletedTasks}
-          onTaskToggle={handleTaskToggle}
-          onTaskDelete={handleTaskDelete}
-          title="Completed Tasks"
-          emptyMessage="No completed tasks for this date."
-          showCompleted={true}
-        />
-      </Box>
-    </Container>
+    <Box sx={{ backgroundColor: "#DFF6DE", minHeight: "100vh" }}>
+      <Container maxWidth="md">
+        <Box sx={{ mt: 5 }}>
+          <NavBar />
+          <SideMenu />
+          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
+            Task Management
+          </Typography>
+
+          <Calendar 
+            onDateSelect={handleDateSelect} 
+            onAddTaskClick={handleAddTaskClick} 
+          />
+          
+          <TaskForm
+            open={isTaskFormOpen}
+            onClose={() => setIsTaskFormOpen(false)}
+            onSubmit={handleTaskSubmit}
+            selectedDate={selectedDate}
+          />
+          
+          <TaskList
+            tasks={filteredTasks}
+            onTaskToggle={handleTaskToggle}
+            onTaskDelete={handleTaskDelete}
+            title="Pending Tasks"
+            emptyMessage="No tasks for this date. Click the + button to add one."
+          />
+          
+          <TaskList
+            tasks={filteredCompletedTasks}
+            onTaskToggle={handleTaskToggle}
+            onTaskDelete={handleTaskDelete}
+            title="Completed Tasks"
+            emptyMessage="No completed tasks for this date."
+            showCompleted={true}
+          />
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

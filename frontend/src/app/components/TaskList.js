@@ -12,6 +12,7 @@ import {
   Paper
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { styled } from '@mui/material/styles';
 
 const PriorityChip = styled(Chip)(({ priority }) => ({
@@ -26,6 +27,7 @@ const TaskList = ({
   tasks, 
   onTaskToggle, 
   onTaskDelete, 
+  onTaskEdit,
   title,
   emptyMessage,
   showCompleted = false 
@@ -45,13 +47,22 @@ const TaskList = ({
             <ListItem
               key={task.id}
               secondaryAction={
-                <IconButton 
-                  edge="end" 
-                  onClick={() => onTaskDelete(task.id)}
-                  aria-label="delete"
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <>
+                  <IconButton 
+                    edge="end" 
+                    onClick={() => onTaskEdit(task)}
+                    aria-label="edit"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton 
+                    edge="end" 
+                    onClick={() => onTaskDelete(task.id)}
+                    aria-label="delete"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </>
               }
               sx={{
                 textDecoration: showCompleted ? 'line-through' : 'none',
