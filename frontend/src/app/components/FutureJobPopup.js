@@ -1,25 +1,39 @@
 import React, { useState } from "react";
-import { Dialog, DialogTitle, DialogContent, TextField, Button, Typography, Box } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, Box, Button, Typography, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "@/app/firebase/firebase"; 
+import EducationForm from "./EducationForm"; 
+import SkillsExperienceForm from "./SkillsExperienceForm"; // ✅ Import new component
 
-const FutureJobPopup = ({ visible, onClose }) => {
+const FutureJobPopup = ({ visible, onClose, email }) => {
   const [futureJob, setFutureJob] = useState("");
+  const [step, setStep] = useState(1); 
   const router = useRouter();
 
-  const handleNext = () => {
-    console.log("Future Job:", futureJob);
-    onClose(); // Close modal after submission
+  const handleNext = async () => {
+    if (step === 1 && futureJob && email) {
+      try {
+        await setDoc(doc(db, "futureJobs", email), { futureJob, email });
+        console.log("Future Job saved:", futureJob);
+        setStep(2); 
+      } catch (error) {
+        console.error("Error saving future job:", error);
+      }
+    } else if (step === 2) {
+      setStep(3); // Move to Skills & Experience form
+    }
   };
 
   const handleSkip = () => {
     onClose();
-    router.push("/home"); // Redirect to home page
+    router.push("/home"); 
   };
 
   return (
     <Dialog open={visible} onClose={handleSkip} fullWidth maxWidth="md">
       <DialogTitle sx={{ textAlign: "center", fontSize: "2rem", fontWeight: "bold", mt: 2 }}>
-        Who you wanna be?
+        {step === 1 ? "Who do you want to be?" : step === 2 ? "Enter Your Education" : "Skills & Experience"}
       </DialogTitle>
 
       <DialogContent
@@ -33,8 +47,8 @@ const FutureJobPopup = ({ visible, onClose }) => {
           padding: 4,
         }}
       >
-        {/* Input and Button Container */}
-        <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
+        {step === 1 && (
+          <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
           <TextField
             placeholder="Type your dream job..."
             value={futureJob}
@@ -47,8 +61,12 @@ const FutureJobPopup = ({ visible, onClose }) => {
             Next
           </Button>
         </Box>
+        )}
 
-        {/* Footer with Skip */}
+        {step === 2 && <EducationForm email={email} onNext={() => setStep(3)} />} 
+        
+        {step === 3 && <SkillsExperienceForm email={email} onNext={handleSkip} />}
+
         <Typography
           onClick={handleSkip}
           sx={{ color: "gray", cursor: "pointer", textDecoration: "underline", mt: 3 }}
@@ -61,3 +79,4 @@ const FutureJobPopup = ({ visible, onClose }) => {
 };
 
 export default FutureJobPopup;
+
