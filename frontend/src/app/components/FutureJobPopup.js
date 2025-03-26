@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Dialog, DialogTitle, DialogContent, TextField, Button, Typography, Box } from "@mui/material";
 import { useRouter } from "next/navigation";
+<<<<<<< Updated upstream
+=======
+//import { setDoc, doc } from "firebase/firestore";
+//import { db } from "@/app/firebase/firebase"; 
+import EducationForm from "./EducationForm"; 
+import SkillsExperienceForm from "./SkillsExperienceForm"; // ✅ Import new component
+>>>>>>> Stashed changes
 
 const FutureJobPopup = ({ visible, onClose }) => {
   const [futureJob, setFutureJob] = useState("");
