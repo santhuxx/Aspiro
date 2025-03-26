@@ -16,50 +16,38 @@ import {
 } from "@mui/material";
 import { ArrowForward, RemoveCircle } from "@mui/icons-material";
 
-const RecommendedSkillsList = () => {
+const RecommendedCourses = () => {
   const [open, setOpen] = useState(false);
-  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
-  const skills = [
+  const courses = [
     {
-      name: "JavaScript",
-      courses: [
-        "JavaScript Basics - Codecademy",
-        "Modern JavaScript from the Beginning - Udemy",
-      ],
+      name: "JavaScript Basics",
+      platforms: ["Codecademy", "Udemy"],
       youtube: [
         "https://www.youtube.com/watch?v=W6NZfCO5SIk",
         "https://www.youtube.com/watch?v=PkZNo7MFNFg",
       ],
     },
     {
-      name: "React",
-      courses: [
-        "React for Beginners - Scrimba",
-        "The Complete React Guide - Udemy",
-      ],
+      name: "React for Beginners",
+      platforms: ["Scrimba", "Udemy"],
       youtube: [
         "https://www.youtube.com/watch?v=Ke90Tje7VS0",
         "https://www.youtube.com/watch?v=bMknfKXIFA8",
       ],
     },
     {
-      name: "Node.js",
-      courses: [
-        "Node.js Basics - Udemy",
-        "The Complete Node.js Developer Course - Udemy",
-      ],
+      name: "Node.js Basics",
+      platforms: ["Udemy", "Coursera"],
       youtube: [
         "https://www.youtube.com/watch?v=TlB_eWDSMt4",
         "https://www.youtube.com/watch?v=fBNz5xF-Kx4",
       ],
     },
     {
-      name: "MongoDB",
-      courses: [
-        "MongoDB Basics - MongoDB University",
-        "Master MongoDB - Udemy",
-      ],
+      name: "MongoDB Basics",
+      platforms: ["MongoDB University", "Udemy"],
       youtube: [
         "https://www.youtube.com/watch?v=FwMwO8pXfq0",
         "https://www.youtube.com/watch?v=oSIv-E60NiU",
@@ -67,14 +55,14 @@ const RecommendedSkillsList = () => {
     },
   ];
 
-  const handleOpen = (skill) => {
-    setSelectedSkill(skill);
+  const handleOpen = (course) => {
+    setSelectedCourse(course);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedSkill(null);
+    setSelectedCourse(null);
   };
 
   return (
@@ -88,10 +76,10 @@ const RecommendedSkillsList = () => {
       }}
     >
       <Typography color="black" variant="h6" fontWeight="bold" sx={{ marginBottom: 2 }}>
-        Recommended Skills
+        Recommended Courses
       </Typography>
       <List>
-        {skills.map((skill, index) => (
+        {courses.map((course, index) => (
           <ListItem
             key={index}
             sx={{
@@ -103,14 +91,14 @@ const RecommendedSkillsList = () => {
               paddingY: 1,
             }}
           >
-            <ListItemText primaryTypographyProps={{ variant:"h8"}} primary={skill.name} sx={{ flexGrow: 1 }} />
+            <ListItemText primaryTypographyProps={{ variant:"h8"}} primary={course.name} sx={{ flexGrow: 1 }} />
 
-            {/* Show Recommended Courses */}
-            <IconButton color="primary" onClick={() => handleOpen(skill)}>
+            {/* Show Recommended Platforms */}
+            <IconButton color="primary" onClick={() => handleOpen(course)}>
               <ArrowForward />
             </IconButton>
 
-            {/* Remove Skill (UI Only) */}
+            {/* Remove Course (UI Only) */}
             <IconButton color="error">
               <RemoveCircle />
             </IconButton>
@@ -122,20 +110,20 @@ const RecommendedSkillsList = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Recommended Learning Resources</DialogTitle>
         <DialogContent>
-          {selectedSkill && (
+          {selectedCourse && (
             <>
               <Typography variant="h6" sx={{ marginBottom: 1 }}>
-                {selectedSkill.name}
+                {selectedCourse.name}
               </Typography>
-              <Typography variant="subtitle1">Courses:</Typography>
+              <Typography variant="subtitle1">Platforms:</Typography>
               <ul>
-                {selectedSkill.courses.map((course, i) => (
-                  <li key={i}>{course}</li>
+                {selectedCourse.platforms.map((platform, i) => (
+                  <li key={i}>{platform}</li>
                 ))}
               </ul>
               <Typography variant="subtitle1">YouTube Links:</Typography>
               <ul>
-                {selectedSkill.youtube.map((link, i) => (
+                {selectedCourse.youtube.map((link, i) => (
                   <li key={i}>
                     <a href={link} target="_blank" rel="noopener noreferrer">
                       {link}
@@ -156,4 +144,4 @@ const RecommendedSkillsList = () => {
   );
 };
 
-export default RecommendedSkillsList
+export default RecommendedCourses;
