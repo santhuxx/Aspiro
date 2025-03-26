@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"; // Import useRouter
 import { Drawer, IconButton, List, ListItem, ListItemText } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
+
 const SideMenu = () => {
   const [open, setOpen] = useState(false); // State to toggle menu visibility
   const router = useRouter(); // Initialize useRouter
@@ -44,11 +45,11 @@ const SideMenu = () => {
         }}
       >
         <List>
-          <ListItem button onClick={() => setOpen(false)}>
+          <ListItem button onClick={() => handleNavigation("/Courses")}>
             <ListItemText primary="My courses" />
           </ListItem>
-          <ListItem button onClick={() => setOpen(false)}>
-            <ListItemText primary="My Skills" />
+          <ListItem button onClick={() => handleNavigation("/skills")}>
+            <ListItemText  primary="My Skills" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation("/task")}>
             <ListItemText primary="My learning journal" />
