@@ -11,7 +11,15 @@ export default function Home() {
 
   return (
     <>
-    <Box sx={{ backgroundColor: "#DFF6DE", minHeight: "100vh" }}>
+    <Box
+        sx={{
+          backgroundImage: `url('/images/Home_back.png')`,
+          backgroundSize: "cover",
+          backgroundPosition: "top",
+          minHeight: "100vh",
+          backgroundAttachment: "fixed",
+        }}
+      >
       <NavBar />
       <SideMenu />
       
