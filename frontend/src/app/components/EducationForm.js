@@ -7,15 +7,48 @@ export default function EducationForm({ email, onNext }) {
   const [educationLevel, setEducationLevel] = useState("");
   const [fieldOfStudy, setFieldOfStudy] = useState("");
   const [institution, setInstitution] = useState("");
-  const [graduationYear, setGraduationYear] = useState("");
+  const [graduationYear, setGraduationYear] = useState(new Date().getFullYear()); // Set current year as default
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const educationLevels = ["No Formal Education", "OL", "AL", "Diploma", "Degree", "Masters", "PhD"];
   const fieldsOfStudy = ["IT", "Business", "Engineering", "Arts", "Science", "Medicine", "Other"];
+  
+  // Get current year
+  const currentYear = new Date().getFullYear();
+  const minYear = 1900;  // Minimum graduation year
 
   const handleNext = async () => {
-    if (!educationLevel || !fieldOfStudy || !institution.trim() || !graduationYear) {
-      alert("Please fill in all fields!");
+    // Reset errors
+    setErrors({});
+
+    // Validate form fields
+    const validationErrors = {};
+
+    if (!educationLevel) {
+      validationErrors.educationLevel = "Please select your education level.";
+    }
+
+    if (!fieldOfStudy) {
+      validationErrors.fieldOfStudy = "Please select your field of study.";
+    }
+
+    if (!institution.trim()) {
+      validationErrors.institution = "Please provide the institution name.";
+    }
+
+    // Graduation year validation
+    if (!graduationYear) {
+      validationErrors.graduationYear = "Please enter your graduation year.";
+    } else if (!/^\d{4}$/.test(graduationYear)) {
+      validationErrors.graduationYear = "Graduation year must be a 4-digit number.";
+    } else if (graduationYear < minYear || graduationYear > currentYear + 10) {
+      validationErrors.graduationYear = `Graduation year must be between ${minYear} and ${currentYear + 10}.`;
+    }
+
+    // If any validation error exists, stop the form submission
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -54,6 +87,8 @@ export default function EducationForm({ email, onNext }) {
           value={educationLevel}
           onChange={(e) => setEducationLevel(e.target.value)}
           sx={{ mb: 2 }}
+          error={!!errors.educationLevel}
+          helperText={errors.educationLevel}
         >
           {educationLevels.map((level) => (
             <MenuItem key={level} value={level}>
@@ -69,6 +104,8 @@ export default function EducationForm({ email, onNext }) {
           value={fieldOfStudy}
           onChange={(e) => setFieldOfStudy(e.target.value)}
           sx={{ mb: 2 }}
+          error={!!errors.fieldOfStudy}
+          helperText={errors.fieldOfStudy}
         >
           {fieldsOfStudy.map((field) => (
             <MenuItem key={field} value={field}>
@@ -84,6 +121,8 @@ export default function EducationForm({ email, onNext }) {
           value={institution}
           onChange={(e) => setInstitution(e.target.value)}
           sx={{ mb: 2 }}
+          error={!!errors.institution}
+          helperText={errors.institution}
         />
 
         <TextField
@@ -94,6 +133,9 @@ export default function EducationForm({ email, onNext }) {
           value={graduationYear}
           onChange={(e) => setGraduationYear(e.target.value)}
           sx={{ mb: 2 }}
+          error={!!errors.graduationYear}
+          helperText={errors.graduationYear}
+          inputProps={{ min: minYear, max: currentYear + 10, pattern: "[0-9]{4}" }}
         />
 
         <Button

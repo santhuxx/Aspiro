@@ -32,24 +32,77 @@ export default function Home() {
 
   return (
     <>
-      <Box sx={{ backgroundColor: "#DFF6DE", minHeight: "100vh" }}>
-        <NavBar />
-        <SideMenu />
 
-        <Container sx={{ textAlign: "center", py: 10 }}>
-          <Typography variant="h2" color="#333" gutterBottom>
-              Welcome to the Home Page
-            </Typography>
+    <NavBar />
+    <SideMenu />
+      <Box
+        sx={{
+          backgroundImage: `url('/images/Home_back.png')`,
+          backgroundSize: "cover",
+          backgroundPosition: "top",
+          minHeight: "100vh",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        {/* Add the "Find best Institutes" text in the top-left */}
+        <Typography
+          variant="h1"
+          sx={{
+            position: "absolute",
+            top: 180,
+            left: 50,
+            fontFamily: "Mplus 1p",
+            fontWeight: "bold",
+            fontSize: "55px",
+            color: "#112F25",
+            lineHeight: 1.2,
+          }}
+        >
+          Find best
+          <br />
+          Institutes
+        </Typography>
+        <Typography
+          variant="h1"
+          sx={{
+            position: "absolute",
+            top: 330,
+            left: 54,
+            fontFamily: "Instrument Sans",
+            fontWeight: "bold",
+            fontSize: "10px",
+            color: "#453C3C",
+            lineHeight: 1.2,
+          }}
+        >
+          Lorem Ipsum is simply dummy text of the printing and typesetting <br/>
+          industry. Lorem Ipsum has been the industry's standard dummy text<br/>
+          ever since the 1500s, when an unknown printer took a galley of<br/> 
+          type and scrambled it to make a type specimen book.
+        </Typography>
+
+        <Container sx={{ textAlign: "left", py: 10  }}>
           <Link href="/institutes" passHref>
             <Typography variant="body1" color="#112F25" sx={{ textDecoration: "underline", cursor: "pointer" }}>
-              Find Institutes
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            <br/><br/><br/><br/>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            Find Institutes
             </Typography>
           </Link>
         </Container>
-        
+
         {/* Ask for email if not entered yet */}
         {!emailEntered ? (
-          <Container sx={{ textAlign: "center", py: 10 }}>
+          <Container sx={{ textAlign: "center", py: 10, mt: 50 }}>
             <Typography variant="body1" color="#112F25">
               Please enter your email to proceed.
             </Typography>
@@ -72,10 +125,6 @@ export default function Home() {
             email={email} // Pass email as prop to FutureJobPopup
           />
         )}
-        
-        {/* Show after email is entered */}
-        
-        
       </Box>
     </>
   );
