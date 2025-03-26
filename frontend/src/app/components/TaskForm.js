@@ -51,7 +51,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
         p: 4,
         borderRadius: 2
       }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" color='#14523D' gutterBottom >
           Add New Task for {selectedDate?.format('MMMM D, YYYY')}
         </Typography>
         <form onSubmit={handleSubmit}>
