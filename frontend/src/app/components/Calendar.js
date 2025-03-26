@@ -16,8 +16,6 @@ const Calendar = ({ onDateSelect, onAddTaskClick }) => {
     onDateSelect(date);
   };
 
-  const isPastDate = selectedDate.isBefore(dayjs(), 'day');
-
   return (
     <Box sx={{ mb: 4, p: 2, border: '1px solid #ddd', borderRadius: 2, backgroundColor: 'white' }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -28,7 +26,6 @@ const Calendar = ({ onDateSelect, onAddTaskClick }) => {
             onClick={() => onAddTaskClick(selectedDate)}
             aria-label="add task"
             sx={{ color: '#14523D' }}
-            disabled={isPastDate}
           >
             <AddCircleOutlineIcon fontSize="large" sx={{ color: '#14523D' }}/>
           </IconButton>

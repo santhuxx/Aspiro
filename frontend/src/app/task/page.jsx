@@ -14,7 +14,7 @@ const TaskPage = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  
+
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
@@ -69,9 +69,6 @@ const TaskPage = () => {
           <SideMenu />
           <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
             Task Management
-          </Typography>
-          <Typography variant="h3" color='#14523D' fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
-            Task Management And Learning Journal
           </Typography>
 
           <Calendar 
