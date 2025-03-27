@@ -44,6 +44,14 @@ export default function Home() {
           backgroundAttachment: "fixed",
         }}
       >
+        <Link href="/institutes" passHref>
+          <Button 
+          variant="contained" 
+            sx={{ backgroundColor: "#112F25", color: "#fff", mt: 50, px: 1, ml: 6.5 }}
+          > 
+            Find Institutes
+          </Button>
+        </Link>
         {/* Add the "Find best Institutes" text in the top-left */}
         <Typography
           variant="h1"
@@ -80,25 +88,6 @@ export default function Home() {
           ever since the 1500s, when an unknown printer took a galley of<br/> 
           type and scrambled it to make a type specimen book.
         </Typography>
-
-        <Container sx={{ textAlign: "left", py: 10  }}>
-          <Link href="/institutes" passHref>
-            <Typography variant="body1" color="#112F25" sx={{ textDecoration: "underline", cursor: "pointer" }}>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/><br/><br/><br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            <br/>
-            Find Institutes
-            </Typography>
-          </Link>
-        </Container>
 
         {/* Ask for email if not entered yet */}
         {!emailEntered ? (
