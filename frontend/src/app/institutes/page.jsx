@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Box, TextField, Button, Typography, Container, CircularProgress, List, ListItem, ListItemText, Link } from "@mui/material";
-
+import Navbar from "../components/NavBar";
+import SideMenu from "../components/SideMenu";
 export default function InstituteFinder() {
   const [step, setStep] = useState(1);
   const [dreamJob, setDreamJob] = useState("");
@@ -34,6 +35,8 @@ export default function InstituteFinder() {
 
   return (
     <>
+      <Navbar />
+      <SideMenu />
       <Box sx={{ minHeight: "100vh", backgroundColor: "#DFF6DE", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
         <Container sx={{ textAlign: "center", py: 5 }}>
           <Box sx={{ backgroundColor: "#fff", p: 4, borderRadius: 2, boxShadow: 3, maxWidth: 500, mx: "auto" }}>
