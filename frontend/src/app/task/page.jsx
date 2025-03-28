@@ -7,7 +7,11 @@ import SideMenu from "../components/SideMenu";
 import Calendar from "../components/Calendar";
 import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
+import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts'; // Import recharts for the pie chart
 import dayjs from 'dayjs';
+
+// Colors for the pie chart
+const COLORS = ['#0088FE', '#FFBB28']; // Blue for completed, yellow for pending
 
 const TaskPage = () => {
   const [tasks, setTasks] = useState([]);
@@ -61,13 +65,27 @@ const TaskPage = () => {
     dayjs(task.date).isSame(selectedDate, 'day')
   );
 
+  // Calculate task completion progress
+  const calculateTaskCompletionProgress = () => {
+    const totalTasks = tasks.length + completedTasks.length;
+    const completedPercentage = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
+    const pendingPercentage = totalTasks > 0 ? (tasks.length / totalTasks) * 100 : 0;
+
+    return [
+      { name: 'Completed', value: completedPercentage },
+      { name: 'Pending', value: pendingPercentage },
+    ];
+  };
+
+  const taskCompletionData = calculateTaskCompletionProgress();
+
   return (
     <Box sx={{ backgroundColor: "#DFF6DE", minHeight: "100vh" }}>
       <Container maxWidth="md">
         <Box sx={{ mt: 5 }}>
           <NavBar />
           <SideMenu />
-          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
+          <Typography variant="h4" color='#14523D' mt={15} fontWeight="bold" gutterBottom sx={{ textAlign: 'center' }}>
             Task Management
           </Typography>
 
@@ -99,6 +117,41 @@ const TaskPage = () => {
             emptyMessage="No completed tasks for this date."
             showCompleted={true}
           />
+
+          {/* Task Completion Progress Section */}
+          <Box 
+            sx={{ 
+              mt: 4, 
+              p: 3, 
+              backgroundColor: "#F0F4F8", // Light gray background for the chart section
+              borderRadius: 2, // Rounded corners
+              boxShadow: 2, // Subtle shadow for better appearance
+              textAlign: "center" 
+            }}
+          >
+            <Typography variant="h5" color="#133429" fontWeight="bold" gutterBottom>
+              Task Completion Progress
+            </Typography>
+
+            <PieChart width={300} height={300}>
+              <Pie
+                data={taskCompletionData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#8884d8"
+                label
+              >
+                {taskCompletionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </Box>
         </Box>
       </Container>
     </Box>

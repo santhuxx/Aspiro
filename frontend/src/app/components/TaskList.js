@@ -3,24 +3,31 @@
 import { 
   Box, 
   Typography, 
-  List, 
-  ListItem, 
-  ListItemText, 
-  Checkbox, 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
   IconButton, 
-  Chip,
-  Paper
+  Paper, 
+  Button, 
+  Checkbox 
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { styled } from '@mui/material/styles';
 
-const PriorityChip = styled(Chip)(({ priority }) => ({
-  marginLeft: '8px',
+const PriorityChip = styled(Box)(({ priority }) => ({
+  display: 'inline-block',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  color: '#000',
   backgroundColor: 
     priority === 'high' ? '#ffcdd2' : 
     priority === 'medium' ? '#fff9c4' : '#c8e6c9',
-  color: '#000',
+  fontWeight: 'bold',
+  fontSize: '0.875rem',
 }));
 
 const TaskList = ({ 
@@ -32,66 +39,117 @@ const TaskList = ({
   emptyMessage,
   showCompleted = false 
 }) => {
+  // Function to generate a task report
+  const handleGenerateReport = () => {
+    const reportData = tasks.map(task => ({
+      TaskID: task.id,
+      Description: task.description,
+      StartTime: task.startTime,
+      EndTime: task.endTime,
+      Priority: task.priority,
+    }));
+
+    const reportContent = reportData.map(task => 
+      `Task ID: ${task.TaskID}\nDescription: ${task.Description}\nStart Time: ${task.StartTime}\nEnd Time: ${task.EndTime}\nPriority: ${task.Priority}\n\n`
+    ).join('');
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'TaskListReport.txt';
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+      {/* Title */}
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
+
+      {/* If no tasks are available */}
       {tasks.length === 0 ? (
         <Typography variant="body2" color="textSecondary">
           {emptyMessage}
         </Typography>
       ) : (
-        <List>
-          {tasks.map((task) => (
-            <ListItem
-              key={task.id}
-              secondaryAction={
-                <>
-                  <IconButton 
-                    edge="end" 
-                    onClick={() => onTaskEdit(task)}
-                    aria-label="edit"
+        <>
+          {/* Task Table */}
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Task ID</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Start Time</TableCell>
+                  <TableCell>End Time</TableCell>
+                  <TableCell>Task Priority</TableCell>
+                  <TableCell align="center">Completed</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tasks.map((task) => (
+                  <TableRow
+                    key={task.id}
+                    sx={{
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      opacity: task.completed ? 0.7 : 1,
+                    }}
                   >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton 
-                    edge="end" 
-                    onClick={() => onTaskDelete(task.id)}
-                    aria-label="delete"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </>
-              }
-              sx={{
-                textDecoration: showCompleted ? 'line-through' : 'none',
-                opacity: showCompleted ? 0.7 : 1,
-              }}
+                    <TableCell>{task.id}</TableCell>
+                    <TableCell>{task.description}</TableCell>
+                    <TableCell>{task.startTime}</TableCell>
+                    <TableCell>{task.endTime}</TableCell>
+                    <TableCell>
+                      <PriorityChip priority={task.priority}>
+                        {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                      </PriorityChip>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Checkbox
+                        checked={task.completed}
+                        onChange={() => onTaskToggle(task.id)}
+                        inputProps={{ 'aria-label': 'Mark task as completed' }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton 
+                        edge="end" 
+                        onClick={() => onTaskEdit(task)}
+                        aria-label="edit"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton 
+                        edge="end" 
+                        onClick={() => onTaskDelete(task.id)}
+                        aria-label="delete"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Generate Report Button */}
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={handleGenerateReport}
             >
-              <Checkbox
-                edge="start"
-                checked={showCompleted}
-                onChange={() => onTaskToggle(task.id)}
-                tabIndex={-1}
-                disableRipple
-              />
-              <ListItemText
-                primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {task.title}
-                    <PriorityChip 
-                      label={task.priority} 
-                      priority={task.priority} 
-                      size="small" 
-                    />
-                  </Box>
-                }
-                secondary={task.description}
-              />
-            </ListItem>
-          ))}
-        </List>
+              Generate Report
+            </Button>
+          </Box>
+        </>
       )}
     </Paper>
   );
