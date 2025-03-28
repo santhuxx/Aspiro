@@ -18,7 +18,9 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
     title: '',
     description: '',
     priority: 'medium',
-    date: selectedDate
+    date: selectedDate,
+    startTime: '',
+    endTime: ''
   });
 
   const handleChange = (e) => {
@@ -33,7 +35,9 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
       title: '',
       description: '',
       priority: 'medium',
-      date: selectedDate
+      date: selectedDate,
+      startTime: '',
+      endTime: ''
     });
     onClose();
   };
@@ -72,7 +76,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
             onChange={handleChange}
             margin="normal"
             multiline
-            rows={4}
+            rows={2}
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>Priority</InputLabel>
@@ -87,6 +91,30 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
               <MenuItem value="high">High</MenuItem>
             </Select>
           </FormControl>
+          <TextField
+            fullWidth
+            label="Start Time"
+            name="startTime"
+            type="time"
+            value={task.startTime}
+            onChange={handleChange}
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            fullWidth
+            label="End Time"
+            name="endTime"
+            type="time"
+            value={task.endTime}
+            onChange={handleChange}
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button onClick={onClose} sx={{ mr: 1 }}>
               Cancel

@@ -16,6 +16,10 @@ const Calendar = ({ onDateSelect, onAddTaskClick }) => {
     onDateSelect(date);
   };
 
+<<<<<<< Updated upstream
+=======
+  // Check if the selected date is in the past
+>>>>>>> Stashed changes
   const isPastDate = selectedDate.isBefore(dayjs(), 'day');
 
   return (
@@ -27,10 +31,15 @@ const Calendar = ({ onDateSelect, onAddTaskClick }) => {
             color="primary" 
             onClick={() => onAddTaskClick(selectedDate)}
             aria-label="add task"
+<<<<<<< Updated upstream
             sx={{ color: '#14523D' }}
             disabled={isPastDate}
+=======
+            sx={{ color: isPastDate ? '#ccc' : '#14523D' }} // Disable color for past dates
+            disabled={isPastDate} // Disable button for past dates
+>>>>>>> Stashed changes
           >
-            <AddCircleOutlineIcon fontSize="large" sx={{ color: '#14523D' }}/>
+            <AddCircleOutlineIcon fontSize="large" sx={{ color: isPastDate ? '#ccc' : '#14523D' }}/>
           </IconButton>
         </Box>
         <DateCalendar 
