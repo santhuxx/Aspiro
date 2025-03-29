@@ -14,22 +14,24 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Divider,
 } from "@mui/material";
 import { Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
 
 const Navbar = () => {
   const router = useRouter();
-  const menuItems = ["Home", "About Us", "Contact Us"];
+  const menuItems = ["Home", "About Us", "Contact Us", "Login", "Sign Up"];
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNavigation = (item) => {
-    router.push(`/${item.toLowerCase().replace(/\s+/g, "")}`);
-    setMobileOpen(false); // Close drawer on navigation
+    const path = item.toLowerCase().replace(/\s+/g, "");
+    router.push(`/${path}`);
+    setMobileOpen(false);
   };
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "#133429" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         {/* Left Side - Logo */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Image src="/images/logo.png" alt="Logo" width={150} height={50} priority />
@@ -45,7 +47,7 @@ const Navbar = () => {
 
         {/* Center - Navigation Links (Hidden on Small Screens) */}
         <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
-          {menuItems.map((item, index) => (
+          {menuItems.slice(0, 3).map((item, index) => (
             <Button
               key={index}
               onClick={() => handleNavigation(item)}
@@ -72,14 +74,21 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       <Drawer anchor="right" open={mobileOpen} onClose={() => setMobileOpen(false)}>
-        <List sx={{ width: 250, backgroundColor: "#133429", height: "100%" }}>
-          {menuItems.map((item, index)  => (
-            <ListItem key={index}  disablePadding>
+        <List sx={{ width: 250, backgroundColor: "#1A4538", height: "100%" }}>
+          {menuItems.map((item, index) => (
+            <ListItem key={index} disablePadding>
               <ListItemButton onClick={() => handleNavigation(item)}>
-                <ListItemText primary={item} sx={{ color: "white"}}/>
+                <ListItemText primary={item} sx={{ color: "white" }} />
               </ListItemButton>
             </ListItem>
           ))}
+          <Divider sx={{ backgroundColor: "white" }} />
+          <ListItem disablePadding>
+            <ListItemButton>
+              <AccountCircle sx={{ color: "white", mr: 2 }} />
+              <ListItemText primary="Profile" sx={{ color: "white" }} />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Drawer>
     </AppBar>
