@@ -170,6 +170,8 @@ export default function InstituteFinder() {
               
               {loading && <CircularProgress sx={{ mt: 3 }} />}
 
+              {loading && <CircularProgress sx={{ mt: 3 }} />}
+
               {filteredInstitutes.length > 0 ? (
                 <List>
                   {filteredInstitutes.map((institute, index) => (
