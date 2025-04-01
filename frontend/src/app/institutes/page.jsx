@@ -57,6 +57,7 @@ export default function InstituteFinder() {
           {/* Search Inputs and Filters */}
           <Box
             sx={{
+
               mt: 5,
               display: "flex",
               flexDirection: "row",
@@ -139,7 +140,6 @@ export default function InstituteFinder() {
             </Button>
           </Box>
 
-          
 
           {/* Results and Map Section - Always Visible */}
           <Box
@@ -168,7 +168,9 @@ export default function InstituteFinder() {
               <Typography variant="h5" sx={{ mb: 2, color: "#14523D", fontWeight: "bold" }}>
                 Results:
               </Typography>
+
               {loading && <CircularProgress sx={{ mt: 3 }} />}
+
               {filteredInstitutes.length > 0 ? (
                 <List>
                   {filteredInstitutes.map((institute, index) => (
