@@ -146,7 +146,7 @@ const TaskList = ({
               color="primary" 
               onClick={handleGenerateReport}
             >
-              Generate Report 
+              Generate Report
             </Button>
           </Box>
         </>
