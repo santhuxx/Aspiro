@@ -169,7 +169,6 @@ export default function InstituteFinder() {
                 Results:
               </Typography>
 
-              {loading && <CircularProgress sx={{ mt: 3 }} />}
 
               {filteredInstitutes.length > 0 ? (
                 <List>
