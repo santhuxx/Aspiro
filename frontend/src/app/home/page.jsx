@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import NavBar from "@/app/components/NavBar";
-import SideMenu from "@/app/components/SideMenu";
-import FutureJobPopup from "@/app/components/FutureJobPopup";
+import NavBar from "@/components/NavBar";
+import SideMenu from "@/components/SideMenu";
+import FutureJobPopup from "@/components/FutureJobPopup";
 import { Box, Typography, Container, TextField, Button } from "@mui/material";
 import Link from "next/link";
 

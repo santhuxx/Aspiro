@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Dialog, DialogTitle, DialogContent, Box, Button, Typography, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { setDoc, doc } from "firebase/firestore";
-import { db } from "@/app/firebase/firebase"; 
+import { db } from "@/firebase/firebase"; 
 import EducationForm from "./EducationForm"; 
 import SkillsExperienceForm from "./SkillsExperienceForm"; // ✅ Import new component
 
