@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, TextField, Button, Typography, Container, MenuItem } from "@mui/material";
 import { setDoc, doc } from "firebase/firestore";
-import { db } from "@/app/firebase/firebase"; // Firebase imports
+import { db } from "@/firebase/firebase"; // Firebase imports
 
 export default function EducationForm({ email, onNext }) {
   const [educationLevel, setEducationLevel] = useState("");
