@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { AddCircleOutline, RemoveCircleOutline, Cancel } from "@mui/icons-material";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/app/firebase/firebase";
+import { db } from "@/firebase/firebase";
 
 const SkillsExperienceForm = ({ email, onNext }) => {
   const [techSkills, setTechSkills] = useState([]);

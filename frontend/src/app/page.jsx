@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import NavBar from "@/app/components/NavBar";
-import SideMenu from "@/app/components/SideMenu";
+import NavBar from "@/components/NavBar";
+import SideMenu from "@/components/SideMenu";
 import { Box, Typography, Container } from "@mui/material";
 import Link from "next/link";
 
