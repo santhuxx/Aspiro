@@ -37,7 +37,7 @@ export default function Home() {
       if (!email) return;
 
       try {
-        const docRef = doc(db, "futureJobs", email);
+        const docRef = doc(db, "futureJob", email);
         const docSnap = await getDoc(docRef);
 
         if (!docSnap.exists()) {
