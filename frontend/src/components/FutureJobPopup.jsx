@@ -14,7 +14,7 @@ const FutureJobPopup = ({ visible, onClose, email }) => {
   const handleNext = async () => {
     if (step === 1 && futureJob && email) {
       try {
-        await setDoc(doc(db, "futureJobs", email), { futureJob, email });
+        await setDoc(doc(db, "futureJob", email), { futureJob, email });
         console.log("Future Job saved:", futureJob);
         setStep(2); 
       } catch (error) {
