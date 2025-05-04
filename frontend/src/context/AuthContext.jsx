@@ -11,7 +11,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+      if (user) {
+        console.log('Auth user:', { email: user.email, emailVerified: user.emailVerified });
+        if (user.emailVerified) {
+          setCurrentUser(user);
+        } else {
+          setCurrentUser(null);
+          console.warn('User email not verified:', user.email);
+        }
+      } else {
+        setCurrentUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -31,3 +41,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthProvider;

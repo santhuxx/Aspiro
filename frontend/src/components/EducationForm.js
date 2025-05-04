@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, TextField, Button, Typography, Container, MenuItem } from "@mui/material";
 import { setDoc, doc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";  // Import Firebase Auth
 import { db } from "@/firebase/firebase"; // Firebase imports
 
-export default function EducationForm({ email, onNext }) {
+export default function EducationForm({ onNext }) {
   const [educationLevel, setEducationLevel] = useState("");
   const [fieldOfStudy, setFieldOfStudy] = useState("");
   const [institution, setInstitution] = useState("");
   const [graduationYear, setGraduationYear] = useState(new Date().getFullYear()); // Set current year as default
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [email, setEmail] = useState("");  // State to hold the authenticated user's email
 
   const educationLevels = ["No Formal Education", "OL", "AL", "Diploma", "Degree", "Masters", "PhD"];
   const fieldsOfStudy = ["IT", "Business", "Engineering", "Arts", "Science", "Medicine", "Other"];
@@ -17,6 +19,16 @@ export default function EducationForm({ email, onNext }) {
   // Get current year
   const currentYear = new Date().getFullYear();
   const minYear = 1900;  // Minimum graduation year
+
+  useEffect(() => {
+    // Get the currently authenticated user
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      setEmail(user.email); // Set the email to state when user is authenticated
+    }
+  }, []);
 
   const handleNext = async () => {
     // Reset errors
@@ -54,7 +66,13 @@ export default function EducationForm({ email, onNext }) {
 
     setLoading(true);
     try {
-      // Save education details under the user's email
+      // Ensure that email is available (authenticated user)
+      if (!email) {
+        console.error("User is not authenticated.");
+        return;
+      }
+
+      // Save education details under the user's email in Firestore
       await setDoc(doc(db, "Education", email), {
         education: {
           educationLevel,
