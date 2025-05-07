@@ -104,6 +104,7 @@ const Navbar = () => {
     </List>
   );
 
+
   return (
     <AppBar position="fixed" sx={{ backgroundColor: '#133429' }}>
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
