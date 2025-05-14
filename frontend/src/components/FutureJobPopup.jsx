@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Dialog, DialogTitle, DialogContent, Box, Button, Typography, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { setDoc, doc } from "firebase/firestore";
-import { db } from "@/app/firebase/firebase"; 
+import { db } from "@/firebase/firebase"; 
 import EducationForm from "./EducationForm"; 
 import SkillsExperienceForm from "./SkillsExperienceForm"; // ✅ Import new component
 
@@ -14,7 +14,7 @@ const FutureJobPopup = ({ visible, onClose, email }) => {
   const handleNext = async () => {
     if (step === 1 && futureJob && email) {
       try {
-        await setDoc(doc(db, "futureJobs", email), { futureJob, email });
+        await setDoc(doc(db, "futureJob", email), { futureJob, email });
         console.log("Future Job saved:", futureJob);
         setStep(2); 
       } catch (error) {

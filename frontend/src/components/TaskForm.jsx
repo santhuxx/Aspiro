@@ -79,7 +79,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
         borderRadius: 2
       }}>
         <Typography variant="h6" gutterBottom>
-          Add New Task for {selectedDate?.format('MMMM D, YYYY')}
+          Add New Task {selectedDate?.format('MMMM D, YYYY')}
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -102,16 +102,16 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
             rows={4}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel>Priority</InputLabel>
+            <InputLabel>Add Priority</InputLabel>
             <Select
               name="priority"
               value={task.priority}
               onChange={handleChange}
               label="Priority"
             >
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
+              <MenuItem value="low">Low </MenuItem>
+              <MenuItem value="medium">Medium </MenuItem>
+              <MenuItem value="high">High </MenuItem>
             </Select>
           </FormControl>
           <TextField

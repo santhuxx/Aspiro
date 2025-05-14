@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Typography, Container, Box } from "@mui/material";
-import NavBar from "../components/NavBar";
-import SideMenu from "../components/SideMenu";
-import Calendar from "../components/Calendar";
-import TaskForm from "../components/TaskForm";
-import TaskList from "../components/TaskList";
+import NavBar from "../../components/NavBar";
+import SideMenu from "../../components/SideMenu";
+import Calendar from "../../components/Calendar";
+import TaskForm from "../../components/TaskForm";
+import TaskList from "../../components/TaskList";
 import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts'; // Import recharts for the pie chart
 import dayjs from 'dayjs';
 

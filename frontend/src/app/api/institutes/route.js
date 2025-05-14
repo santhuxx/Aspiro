@@ -17,7 +17,13 @@ export async function GET(req) {
     });
 
     const data = await response.json();
-    
+
+    // Check if data.data exists and is an array
+    if (!data.data || !Array.isArray(data.data)) {
+      console.error("Unexpected API response structure:", data);
+      return NextResponse.json({ error: "Invalid API response" }, { status: 500 });
+    }
+
     // Extract only required details
     const results = data.data.map((institute) => ({
       name: institute.name,
