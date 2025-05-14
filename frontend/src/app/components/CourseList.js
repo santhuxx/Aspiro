@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Dialog,
@@ -8,11 +9,16 @@ import {
   TextField,
   Typography,
   Box,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebase";
+import { v4 as uuidv4 } from "uuid"; // For generating unique course IDs
 
-const CourseList = () => {
+const CourseList = ({ email }) => {
   const [courses, setCourses] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [courseName, setCourseName] = useState("");
@@ -22,10 +28,45 @@ const CourseList = () => {
   const [endDate, setEndDate] = useState("");
   const [courseType, setCourseType] = useState("online");
   const [courseStatus, setCourseStatus] = useState("ongoing");
-  const [editIndex, setEditIndex] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
+  const [editId, setEditId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Handle input changes for text fields
+  useEffect(() => {
+    console.log("CourseList initialized with email:", email);
+    if (!email) {
+      setError("No user email provided. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchCourses = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const docRef = doc(db, "userCourses", email);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setCourses(data.courses || []);
+          console.log("Fetched courses:", data.courses || []);
+        } else {
+          setCourses([]);
+          console.log("No courses document found for user:", email);
+        }
+      } catch (err) {
+        console.error("Error fetching courses:", err, { code: err.code, message: err.message });
+        setError(`Failed to load courses: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [email]);
+
   const handleInputChange = (setter) => (e) => {
     const value = e.target.value;
     if (/^[a-zA-Z0-9\s]*$/.test(value)) {
@@ -33,94 +74,160 @@ const CourseList = () => {
     }
   };
 
-  // Start date validation
   const handleStartDateChange = (e) => {
     const value = e.target.value;
-    const today = new Date().toISOString().split("T")[0];
-    if (value <= today) {
+    if (value) {
       setStartDate(value);
     } else {
-      alert("Start date cannot be in the future!");
+      alert("Please select a valid start date.");
     }
   };
 
-  // End date validation for completed courses
   const handleEndDateChange = (e) => {
     const value = e.target.value;
     const today = new Date().toISOString().split("T")[0];
 
-    if (courseStatus === "completed") {
-      if (value && value > today) {
-        alert("End date for completed courses cannot be in the future!");
-      } else if (value >= startDate || value === startDate) {
-        setEndDate(value);
-      } else {
-        alert("End date cannot be earlier than start date!");
-      }
-    } else if (courseStatus === "ongoing") {
-      if (value && value < startDate) {
-        alert("End date cannot be earlier than start date!");
-      } else {
-        setEndDate(value); // Allow future dates for ongoing courses
-      }
-    }
-  };
-
-  const handleAddCourse = () => {
-    if (!courseName.trim() || !instituteName.trim() || !description.trim() || !startDate || (courseStatus === "completed" && !endDate)) {
-      alert("All fields are required!");
+    if (value && value < startDate) {
+      alert("End date cannot be earlier than start date!");
       return;
     }
 
-    if (editIndex === null) {
-      const duplicate = courses.some(
-        (course) =>
-          course.courseName.toLowerCase() === courseName.toLowerCase() &&
-          course.instituteName.toLowerCase() === instituteName.toLowerCase()
-      );
-
-      if (duplicate) {
-        alert("This course already exists!");
-        return;
+    if (courseStatus === "completed") {
+      if (value && value > today) {
+        alert("End date for completed courses cannot be in the future!");
+      } else if (value) {
+        setEndDate(value);
+      } else {
+        alert("End date is required for completed courses!");
       }
-
-      setCourses([
-        ...courses,
-        { courseName, instituteName, description, startDate, endDate, courseType, courseStatus },
-      ]);
-    } else {
-      const updatedCourses = [...courses];
-      updatedCourses[editIndex] = {
-        courseName,
-        instituteName,
-        description,
-        startDate,
-        endDate,
-        courseType,
-        courseStatus,
-      };
-      setCourses(updatedCourses);
+    } else if (courseStatus === "ongoing") {
+      setEndDate(value); // Allow future or empty end dates for ongoing courses
     }
-
-    clearForm();
-    setShowForm(false);
   };
 
-  const handleEditCourse = (index) => {
-    setCourseName(courses[index].courseName);
-    setInstituteName(courses[index].instituteName);
-    setDescription(courses[index].description);
-    setStartDate(courses[index].startDate);
-    setEndDate(courses[index].endDate);
-    setCourseType(courses[index].courseType);
-    setCourseStatus(courses[index].courseStatus);
-    setEditIndex(index);
+  const handleAddOrUpdateCourse = async () => {
+    if (!courseName.trim() || !instituteName.trim() || !description.trim() || !startDate || (courseStatus === "completed" && !endDate)) {
+      alert("All required fields must be filled!");
+      return;
+    }
+
+    if (!email) {
+      setError("Cannot save course: No user email provided.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const trimmedCourseName = courseName.trim();
+      const trimmedInstituteName = instituteName.trim();
+      const trimmedDescription = description.trim();
+
+      const courseData = {
+        id: editId || uuidv4(), // Use existing ID for edits, generate new for adds
+        courseName: trimmedCourseName,
+        instituteName: trimmedInstituteName,
+        description: trimmedDescription,
+        startDate,
+        endDate: endDate || "",
+        courseType,
+        courseStatus,
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log("Saving course data:", courseData);
+
+      let updatedCourses = [...courses];
+
+      if (editId) {
+        // Check for duplicates (excluding the course being edited)
+        if (
+          courses.some(
+            (course) =>
+              course.id !== editId &&
+              course.courseName.toLowerCase() === trimmedCourseName.toLowerCase() &&
+              course.instituteName.toLowerCase() === trimmedInstituteName.toLowerCase()
+          )
+        ) {
+          alert("This course already exists!");
+          setLoading(false);
+          return;
+        }
+        // Update course locally
+        updatedCourses = updatedCourses.map((course) =>
+          course.id === editId ? courseData : course
+        );
+      } else {
+        // Check for duplicates
+        if (
+          courses.some(
+            (course) =>
+              course.courseName.toLowerCase() === trimmedCourseName.toLowerCase() &&
+              course.instituteName.toLowerCase() === trimmedInstituteName.toLowerCase()
+          )
+        ) {
+          alert("This course already exists!");
+          setLoading(false);
+          return;
+        }
+        // Add new course locally
+        updatedCourses = [...updatedCourses, courseData];
+      }
+
+      // Save to Firestore
+      const docRef = doc(db, "userCourses", email);
+      await setDoc(docRef, { courses: updatedCourses }, { merge: true });
+
+      setCourses(updatedCourses);
+      console.log("Courses updated in Firestore:", updatedCourses);
+      clearForm();
+      setShowForm(false);
+    } catch (err) {
+      console.error("Error saving course:", err, {
+        code: err.code,
+        message: err.message,
+        email,
+        courseData,
+      });
+      setError(`Failed to save course: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditCourse = (course) => {
+    setCourseName(course.courseName);
+    setInstituteName(course.instituteName);
+    setDescription(course.description);
+    setStartDate(course.startDate);
+    setEndDate(course.endDate);
+    setCourseType(course.courseType);
+    setCourseStatus(course.courseStatus);
+    setEditId(course.id);
     setShowForm(true);
   };
 
-  const handleDeleteCourse = (index) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      setCourses(courses.filter((_, i) => i !== index));
+  const handleDeleteCourse = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const updatedCourses = courses.filter((course) => course.id !== id);
+      const docRef = doc(db, "userCourses", email);
+
+      // Update Firestore
+      await setDoc(docRef, { courses: updatedCourses }, { merge: true });
+
+      setCourses(updatedCourses);
+      console.log("Course deleted from Firestore:", updatedCourses);
+    } catch (err) {
+      console.error("Error deleting course:", err, { code: err.code, message: err.message });
+      setError(`Failed to delete course: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,288 +239,268 @@ const CourseList = () => {
     setEndDate("");
     setCourseType("online");
     setCourseStatus("ongoing");
-    setEditIndex(null);
+    setEditId(null);
+    setError("");
   };
 
-  // Handle search query change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value.toLowerCase());
   };
 
-  // Filter courses based on search query
-  const filteredCourses = courses.filter((course) => 
-    course.courseName.toLowerCase().includes(searchQuery) ||
-    course.instituteName.toLowerCase().includes(searchQuery)
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.courseName.toLowerCase().includes(searchQuery) ||
+      course.instituteName.toLowerCase().includes(searchQuery)
   );
+
+  // Test Firestore write (for debugging)
 
   return (
     <Box
       sx={{
         background: "#B5CFB4",
-        padding: "20px",
+        p: 3,
         borderRadius: "12px",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-        maxWidth: "500px",
       }}
     >
-      <TextField
-        label="Search Courses"
-        fullWidth
-        value={searchQuery}
-        onChange={handleSearchChange}
-        margin="normal"
-        sx={{ marginBottom: "20px" }}
-      />
-
-      <Button
-        variant="contained"
-        sx={{
-          backgroundColor: "#14523D",
-          color: "#FFFFFF",
-          "&:hover": {
-            backgroundColor: "#062b14",
-          },
-        }}
-        onClick={() => setShowForm(true)}
-      >
-        Add Course
-      </Button>
-
-      <Dialog open={showForm} onClose={() => setShowForm(false)}>
-        <DialogTitle>{editIndex !== null ? "Edit Course" : "Add Course"}</DialogTitle>
-        <DialogContent>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress sx={{ color: "#14523D" }} />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      ) : (
+        <>
           <TextField
-            label="Institute Name"
+            label="Search Courses"
             fullWidth
-            value={instituteName}
-            onChange={handleInputChange(setInstituteName)}
+            value={searchQuery}
+            onChange={handleSearchChange}
             margin="normal"
+            sx={{ mb: 2 }}
           />
-          <TextField
-            label="Course Name"
-            fullWidth
-            value={courseName}
-            onChange={handleInputChange(setCourseName)}
-            margin="normal"
-          />
-          <TextField
-            label="Course Description"
-            fullWidth
-            multiline
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            margin="normal"
-          />
-          <TextField
-            label="Start Date"
-            type="date"
-            fullWidth
-            value={startDate}
-            onChange={handleStartDateChange}
-            margin="normal"
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-          {courseStatus === "completed" && (
-            <TextField
-              label="End Date"
-              type="date"
-              fullWidth
-              value={endDate}
-              onChange={handleEndDateChange}
-              margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          )}
-          {courseStatus === "ongoing" && (
-            <TextField
-              label="Optional End Date (Future)"
-              type="date"
-              fullWidth
-              value={endDate}
-              onChange={handleEndDateChange}
-              margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          )}
-          <Box mt={2}>
-            <Typography variant="body1">Course Type</Typography>
-            <Button
-              variant={courseType === "online" ? "contained" : "outlined"}
-              onClick={() => setCourseType("online")}
-              sx={{ marginRight: 2 }}
-            >
-              Online
-            </Button>
-            <Button
-              variant={courseType === "physical" ? "contained" : "outlined"}
-              onClick={() => setCourseType("physical")}
-            >
-              Physical
-            </Button>
-          </Box>
-          <Box mt={2}>
-            <Typography variant="body1">Course Status</Typography>
-            <Button
-              variant={courseStatus === "ongoing" ? "contained" : "outlined"}
-              onClick={() => setCourseStatus("ongoing")}
-              sx={{ marginRight: 2 }}
-            >
-              Ongoing
-            </Button>
-            <Button
-              variant={courseStatus === "completed" ? "contained" : "outlined"}
-              onClick={() => setCourseStatus("completed")}
-            >
-              Completed
-            </Button>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowForm(false)} color="secondary">
-            Cancel
-          </Button>
           <Button
-            onClick={handleAddCourse}
-            color="primary"
-            disabled={
-              !courseName.trim() ||
-              !instituteName.trim() ||
-              !description.trim() ||
-              !startDate ||
-              (courseStatus === "completed" && !endDate)
-            }
+            variant="contained"
+            onClick={() => setShowForm(true)}
+            sx={{
+              backgroundColor: "#14523D",
+              "&:hover": { backgroundColor: "#062b14" },
+              mb: 1,
+            }}
           >
-            {editIndex !== null ? "Update Course" : "Add Course"}
+            Add Course
           </Button>
-        </DialogActions>
-      </Dialog>
+          
 
-      <Box mt={2}>
-        <Typography variant="h6" color="#423F3F">Ongoing Courses</Typography>
-        <Box sx={{ maxHeight: "300px", overflowY: "auto", paddingRight: "10px" }}>
-          {filteredCourses
-            .filter((course) => course.courseStatus === "ongoing")
-            .map((course, index) => (
-              <Box
-                key={index}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-                sx={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  boxShadow: 1,
-                  background: "rgba(255, 255, 255, 0.3)",
-                  borderRadius: "8px",
-                  marginBottom: "8px",
-                  color: "black",
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  onClick={() => alert(`Course Details: ${course.description}`)}
-                  style={{ cursor: "pointer", fontWeight: "bold", fontSize: "16px" }}
+          <Dialog open={showForm} onClose={() => setShowForm(false)}>
+            <DialogTitle>{editId ? "Edit Course" : "Add Course"}</DialogTitle>
+            <DialogContent>
+              <TextField
+                label="Institute Name"
+                fullWidth
+                value={instituteName}
+                onChange={handleInputChange(setInstituteName)}
+                margin="normal"
+                required
+              />
+              <TextField
+                label="Course Name"
+                fullWidth
+                value={courseName}
+                onChange={handleInputChange(setCourseName)}
+                margin="normal"
+                required
+              />
+              <TextField
+                label="Course Description"
+                fullWidth
+                multiline
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                margin="normal"
+                required
+              />
+              <TextField
+                label="Start Date"
+                type="date"
+                fullWidth
+                value={startDate}
+                onChange={handleStartDateChange}
+                margin="normal"
+                InputLabelProps={{ shrink: true }}
+                required
+              />
+              <TextField
+                label={courseStatus === "completed" ? "End Date" : "Optional End Date"}
+                type="date"
+                fullWidth
+                value={endDate}
+                onChange={handleEndDateChange}
+                margin="normal"
+                InputLabelProps={{ shrink: true }}
+                required={courseStatus === "completed"}
+              />
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1">Course Type</Typography>
+                <Button
+                  variant={courseType === "online" ? "contained" : "outlined"}
+                  onClick={() => setCourseType("online")}
+                  sx={{ mr: 2 }}
                 >
-                  {course.courseName}
-                </Typography>
-                <Box>
-                  <Button
-                    color="primary"
-                    onClick={() => handleEditCourse(index)}
-                    size="small"
-                  >
-                    <EditIcon />
-                  </Button>
-                  <Button
-                    color="error"
-                    onClick={() => handleDeleteCourse(index)}
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </Button>
-                </Box>
+                  Online
+                </Button>
+                <Button
+                  variant={courseType === "physical" ? "contained" : "outlined"}
+                  onClick={() => setCourseType("physical")}
+                >
+                  Physical
+                </Button>
               </Box>
-            ))}
-        </Box>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1">Course Status</Typography>
+                <Button
+                  variant={courseStatus === "ongoing" ? "contained" : "outlined"}
+                  onClick={() => setCourseStatus("ongoing")}
+                  sx={{ mr: 2 }}
+                >
+                  Ongoing
+                </Button>
+                <Button
+                  variant={courseStatus === "completed" ? "contained" : "outlined"}
+                  onClick={() => setCourseStatus("completed")}
+                >
+                  Completed
+                </Button>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setShowForm(false)} color="secondary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddOrUpdateCourse}
+                color="primary"
+                disabled={
+                  !courseName.trim() ||
+                  !instituteName.trim() ||
+                  !description.trim() ||
+                  !startDate ||
+                  (courseStatus === "completed" && !endDate) ||
+                  loading
+                }
+              >
+                {editId ? "Update Course" : "Add Course"}
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-        <Typography variant="h6" color="#423F3F" >Completed Courses</Typography>
-        <Box sx={{ maxHeight: "300px", overflowY: "auto", paddingRight: "10px" }}>
-          {filteredCourses
-            .filter((course) => course.courseStatus === "completed")
-            .map((course, index) => (
-              <Box
-                key={index}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-                sx={{
-                  padding: "10px",
-                  borderRadius: "5px",
-                  boxShadow: 1,
-                  background: "rgba(255, 255, 255, 0.3)",
-                  borderRadius: "8px",
-                  marginBottom: "8px",
-                  color: "black",
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  onClick={() => alert(`Course Details: ${course.description}`)}
-                  style={{ cursor: "pointer", fontWeight: "bold", fontSize: "16px" }}
-                >
-                  {course.courseName}
-                </Typography>
-                <Box>
-                  <Button
-                    color="primary"
-                    onClick={() => handleEditCourse(index)}
-                    size="small"
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" color="#14523D">
+              Ongoing Courses
+            </Typography>
+            <Box sx={{ maxHeight: "300px", overflowY: "auto", pr: 1 }}>
+              {filteredCourses
+                .filter((course) => course.courseStatus === "ongoing")
+                .map((course) => (
+                  <Box
+                    key={course.id}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      p: 2,
+                      mb: 1,
+                      borderRadius: "8px",
+                      bgcolor: "rgba(255, 255, 255, 0.3)",
+                      boxShadow: 1,
+                    }}
                   >
-                    <EditIcon />
-                  </Button>
-                  <Button
-                    color="error"
-                    onClick={() => handleDeleteCourse(index)}
-                    size="small"
+                    <Typography
+                      variant="body1"
+                      onClick={() => alert(`Course Details: ${course.description}`)}
+                      sx={{ cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      {course.courseName} ({course.instituteName})
+                    </Typography>
+                    <Box>
+                      <Button
+                        color="primary"
+                        onClick={() => handleEditCourse(course)}
+                        size="small"
+                        disabled={loading}
+                      >
+                        <EditIcon />
+                      </Button>
+                      <Button
+                        color="error"
+                        onClick={() => handleDeleteCourse(course.id)}
+                        size="small"
+                        disabled={loading}
+                      >
+                        <DeleteIcon />
+                      </Button>
+                    </Box>
+                  </Box>
+                ))}
+            </Box>
+
+            <Typography variant="h6" color="#14523D" sx={{ mt: 2 }}>
+              Completed Courses
+            </Typography>
+            <Box sx={{ maxHeight: "300px", overflowY: "auto", pr: 1 }}>
+              {filteredCourses
+                .filter((course) => course.courseStatus === "completed")
+                .map((course) => (
+                  <Box
+                    key={course.id}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      p: 2,
+                      mb: 1,
+                      borderRadius: "8px",
+                      bgcolor: "rgba(255, 255, 255, 0.3)",
+                      boxShadow: 1,
+                    }}
                   >
-                    <DeleteIcon />
-                  </Button>
-                </Box>
-              </Box>
-            ))}
-        </Box>
-      </Box>
+                    <Typography
+                      variant="body1"
+                      onClick={() => alert(`Course Details: ${course.description}`)}
+                      sx={{ cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      {course.courseName} ({course.instituteName})
+                    </Typography>
+                    <Box>
+                      <Button
+                        color="primary"
+                        onClick={() => handleEditCourse(course)}
+                        size="small"
+                        disabled={loading}
+                      >
+                        <EditIcon />
+                      </Button>
+                      <Button
+                        color="error"
+                        onClick={() => handleDeleteCourse(course.id)}
+                        size="small"
+                        disabled={loading}
+                      >
+                        <DeleteIcon />
+                      </Button>
+                    </Box>
+                  </Box>
+                ))}
+            </Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
 
 export default CourseList;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
