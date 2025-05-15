@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   TextField, 
@@ -14,24 +14,44 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 
-const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
+const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
+  // Use current date if selectedDate is not provided
+  const effectiveDate = selectedDate || dayjs();
+
+  // If editing, initialize with taskToEdit, else with empty fields
   const [task, setTask] = useState({
     title: '',
     description: '',
     priority: 'medium',
-    date: selectedDate,
+    date: effectiveDate,
     startTime: '',
     endTime: ''
   });
+
+  useEffect(() => {
+    if (taskToEdit) {
+      setTask({
+        ...taskToEdit,
+        date: taskToEdit.date ? dayjs(taskToEdit.date) : effectiveDate,
+      });
+    } else {
+      setTask({
+        title: '',
+        description: '',
+        priority: 'medium',
+        date: effectiveDate,
+        startTime: '',
+        endTime: ''
+      });
+    }
+    // eslint-disable-next-line
+  }, [taskToEdit, open, selectedDate]);
 
   const [error, setError] = useState({ startTime: '', endTime: '' });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Reset error messages when the user changes the input
     setError((prev) => ({ ...prev, [name]: '' }));
-
     setTask((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -39,16 +59,14 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
     e.preventDefault();
 
     const now = dayjs();
-    const isToday = selectedDate.isSame(now, 'day');
+    const isToday = effectiveDate.isSame(now, 'day');
 
-    // Validate start time
-    if (isToday && task.startTime && dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.startTime}`).isBefore(now)) {
+    if (isToday && task.startTime && dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.startTime}`).isBefore(now)) {
       setError((prev) => ({ ...prev, startTime: 'Start time cannot be in the past.' }));
       return;
     }
 
-    // Validate end time
-    if (task.endTime && task.startTime && dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.endTime}`).isBefore(dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.startTime}`))) {
+    if (task.endTime && task.startTime && dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.endTime}`).isBefore(dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.startTime}`))) {
       setError((prev) => ({ ...prev, endTime: 'End time cannot be earlier than start time.' }));
       return;
     }
@@ -58,7 +76,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
       title: '',
       description: '',
       priority: 'medium',
-      date: selectedDate,
+      date: effectiveDate,
       startTime: '',
       endTime: ''
     });
@@ -79,7 +97,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
         borderRadius: 2
       }}>
         <Typography variant="h6" gutterBottom>
-          Add New Task for {selectedDate?.format('MMMM D, YYYY')}
+          {taskToEdit ? 'Edit Task' : 'Add New Task'} {effectiveDate.format('MMMM D, YYYY')}
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -102,16 +120,16 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
             rows={4}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel>Priority</InputLabel>
+            <InputLabel>Add Priority</InputLabel>
             <Select
               name="priority"
               value={task.priority}
               onChange={handleChange}
               label="Priority"
             >
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
+              <MenuItem value="low">Low </MenuItem>
+              <MenuItem value="medium">Medium </MenuItem>
+              <MenuItem value="high">High </MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -147,7 +165,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate }) => {
               Cancel
             </Button>
             <Button type="submit" variant="contained" color="primary">
-              Add Task
+              {taskToEdit ? 'Update Task' : 'Add Task'}
             </Button>
           </Box>
         </form>

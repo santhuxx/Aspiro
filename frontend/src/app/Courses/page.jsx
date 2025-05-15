@@ -1,9 +1,9 @@
 "use client";
 import { Grid, Box, Container, Typography, Button } from "@mui/material";
-import NavBar from "@/app/components/NavBar";
-import SideMenu from "@/app/components/SideMenu";
-import CourseList from "../components/CourseList";
-import RecommendedCourses from "../components/RecommendedCourses";
+import NavBar from "@/components/NavBar";
+import SideMenu from "@/components/SideMenu";
+import CourseList from "../../components/CourseList";
+import RecommendedCourses from "../../components/RecommendedCourses";
 
 export default function SkillsPage() {
 

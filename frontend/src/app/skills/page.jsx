@@ -1,9 +1,9 @@
 "use client";
 import {Grid,Box,Container, Typography } from "@mui/material";
-import NavBar from "@/app/components/NavBar";
-import SideMenu from "@/app/components/SideMenu";
-import SkillList from "../components/SkillList";
-import RecommendedSkillsList from "../components/RecommendedSkillsList";  
+import NavBar from "@/components/NavBar";
+import SideMenu from "@/components/SideMenu";
+import SkillList from "../../components/SkillList";
+import RecommendedSkillsList from "../../components/RecommendedSkillsList";  
 
 export default function SkillsPage() {
   return (

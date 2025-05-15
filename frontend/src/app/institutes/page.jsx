@@ -16,8 +16,8 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import Navbar from "../components/NavBar";
-import SideMenu from "../components/SideMenu";
+import Navbar from "../../components/NavBar";
+import SideMenu from "../../components/SideMenu";
 
 export default function InstituteFinder() {
   const [dreamJob, setDreamJob] = useState("");
