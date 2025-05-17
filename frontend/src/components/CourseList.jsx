@@ -14,9 +14,9 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebase/firebase";
-import { v4 as uuidv4 } from "uuid"; // For generating unique course IDs
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 const CourseList = ({ email }) => {
   const [courses, setCourses] = useState([]);
@@ -45,17 +45,15 @@ const CourseList = ({ email }) => {
       setLoading(true);
       setError("");
       try {
-        const docRef = doc(db, "userCourses", email);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setCourses(data.courses || []);
-          console.log("Fetched courses:", data.courses || []);
-        } else {
-          setCourses([]);
-          console.log("No courses document found for user:", email);
-        }
+        const coursesRef = collection(db, "userCourses", email, "courses");
+        const q = query(coursesRef, orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const fetchedCourses = [];
+        querySnapshot.forEach((doc) => {
+          fetchedCourses.push({ id: doc.id, ...doc.data() });
+        });
+        setCourses(fetchedCourses);
+        console.log("Fetched courses:", fetchedCourses);
       } catch (err) {
         console.error("Error fetching courses:", err, { code: err.code, message: err.message });
         setError(`Failed to load courses: ${err.message}`);
@@ -105,7 +103,7 @@ const CourseList = ({ email }) => {
     }
   };
 
-  const handleAddOrUpdateCourse = async () => {
+  const handleAddCourse = async () => {
     if (!courseName.trim() || !instituteName.trim() || !description.trim() || !startDate || (courseStatus === "completed" && !endDate)) {
       alert("All required fields must be filled!");
       return;
@@ -116,70 +114,40 @@ const CourseList = ({ email }) => {
       return;
     }
 
-    setLoading(true);
-    setError("");
     try {
-      const trimmedCourseName = courseName.trim();
-      const trimmedInstituteName = instituteName.trim();
-      const trimmedDescription = description.trim();
-
       const courseData = {
-        id: editId || uuidv4(), // Use existing ID for edits, generate new for adds
-        courseName: trimmedCourseName,
-        instituteName: trimmedInstituteName,
-        description: trimmedDescription,
+        courseName: courseName.trim(),
+        instituteName: instituteName.trim(),
+        description: description.trim(),
         startDate,
         endDate: endDate || "",
         courseType,
         courseStatus,
-        createdAt: new Date().toISOString(),
+        createdAt: Timestamp.now(),
       };
 
       console.log("Saving course data:", courseData);
 
-      let updatedCourses = [...courses];
-
       if (editId) {
-        // Check for duplicates (excluding the course being edited)
-        if (
-          courses.some(
-            (course) =>
-              course.id !== editId &&
-              course.courseName.toLowerCase() === trimmedCourseName.toLowerCase() &&
-              course.instituteName.toLowerCase() === trimmedInstituteName.toLowerCase()
-          )
-        ) {
-          alert("This course already exists!");
-          setLoading(false);
-          return;
-        }
-        // Update course locally
-        updatedCourses = updatedCourses.map((course) =>
-          course.id === editId ? courseData : course
-        );
+        const courseRef = doc(db, "userCourses", email, "courses", editId);
+        await updateDoc(courseRef, courseData);
+        setCourses(courses.map((c) => (c.id === editId ? { id: editId, ...courseData } : c)));
+        console.log("Course updated:", { id: editId, ...courseData });
       } else {
-        // Check for duplicates
-        if (
-          courses.some(
-            (course) =>
-              course.courseName.toLowerCase() === trimmedCourseName.toLowerCase() &&
-              course.instituteName.toLowerCase() === trimmedInstituteName.toLowerCase()
-          )
-        ) {
+        const duplicate = courses.some(
+          (course) =>
+            course.courseName.toLowerCase() === courseName.toLowerCase().trim() &&
+            course.instituteName.toLowerCase() === instituteName.toLowerCase().trim()
+        );
+        if (duplicate) {
           alert("This course already exists!");
-          setLoading(false);
           return;
         }
-        // Add new course locally
-        updatedCourses = [...updatedCourses, courseData];
+        const courseRef = await addDoc(collection(db, "userCourses", email, "courses"), courseData);
+        setCourses([{ id: courseRef.id, ...courseData }, ...courses]);
+        console.log("Course added:", { id: courseRef.id, ...courseData });
       }
 
-      // Save to Firestore
-      const docRef = doc(db, "userCourses", email);
-      await setDoc(docRef, { courses: updatedCourses }, { merge: true });
-
-      setCourses(updatedCourses);
-      console.log("Courses updated in Firestore:", updatedCourses);
       clearForm();
       setShowForm(false);
     } catch (err) {
@@ -190,8 +158,6 @@ const CourseList = ({ email }) => {
         courseData,
       });
       setError(`Failed to save course: ${err.message}`);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -208,26 +174,15 @@ const CourseList = ({ email }) => {
   };
 
   const handleDeleteCourse = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) {
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    try {
-      const updatedCourses = courses.filter((course) => course.id !== id);
-      const docRef = doc(db, "userCourses", email);
-
-      // Update Firestore
-      await setDoc(docRef, { courses: updatedCourses }, { merge: true });
-
-      setCourses(updatedCourses);
-      console.log("Course deleted from Firestore:", updatedCourses);
-    } catch (err) {
-      console.error("Error deleting course:", err, { code: err.code, message: err.message });
-      setError(`Failed to delete course: ${err.message}`);
-    } finally {
-      setLoading(false);
+    if (window.confirm("Are you sure you want to delete this course?")) {
+      try {
+        await deleteDoc(doc(db, "userCourses", email, "courses", id));
+        setCourses(courses.filter((c) => c.id !== id));
+        console.log("Course deleted:", id);
+      } catch (err) {
+        console.error("Error deleting course:", err, { code: err.code, message: err.message });
+        setError(`Failed to delete course: ${err.message}`);
+      }
     }
   };
 
@@ -253,7 +208,8 @@ const CourseList = ({ email }) => {
       course.instituteName.toLowerCase().includes(searchQuery)
   );
 
-  // Test Firestore write (for debugging)
+
+
 
   return (
     <Box
@@ -371,7 +327,7 @@ const CourseList = ({ email }) => {
                 </Button>
                 <Button
                   variant={courseStatus === "completed" ? "contained" : "outlined"}
-                  onClick={() => setCourseStatus("completed")}
+                  onClick={() => setCourseType("completed")}
                 >
                   Completed
                 </Button>
@@ -382,15 +338,14 @@ const CourseList = ({ email }) => {
                 Cancel
               </Button>
               <Button
-                onClick={handleAddOrUpdateCourse}
+                onClick={handleAddCourse}
                 color="primary"
                 disabled={
                   !courseName.trim() ||
                   !instituteName.trim() ||
                   !description.trim() ||
                   !startDate ||
-                  (courseStatus === "completed" && !endDate) ||
-                  loading
+                  (courseStatus === "completed" && !endDate)
                 }
               >
                 {editId ? "Update Course" : "Add Course"}
@@ -431,7 +386,6 @@ const CourseList = ({ email }) => {
                         color="primary"
                         onClick={() => handleEditCourse(course)}
                         size="small"
-                        disabled={loading}
                       >
                         <EditIcon />
                       </Button>
@@ -439,7 +393,6 @@ const CourseList = ({ email }) => {
                         color="error"
                         onClick={() => handleDeleteCourse(course.id)}
                         size="small"
-                        disabled={loading}
                       >
                         <DeleteIcon />
                       </Button>
@@ -480,7 +433,6 @@ const CourseList = ({ email }) => {
                         color="primary"
                         onClick={() => handleEditCourse(course)}
                         size="small"
-                        disabled={loading}
                       >
                         <EditIcon />
                       </Button>
@@ -488,7 +440,6 @@ const CourseList = ({ email }) => {
                         color="error"
                         onClick={() => handleDeleteCourse(course.id)}
                         size="small"
-                        disabled={loading}
                       >
                         <DeleteIcon />
                       </Button>

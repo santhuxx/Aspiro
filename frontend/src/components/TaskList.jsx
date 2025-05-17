@@ -39,7 +39,6 @@ const TaskList = ({
   emptyMessage,
   showCompleted = false 
 }) => {
-  // Function to generate a task report
   const handleGenerateReport = () => {
     const reportData = tasks.map(task => ({
       TaskID: task.id,
@@ -66,19 +65,16 @@ const TaskList = ({
 
   return (
     <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-      {/* Title */}
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
 
-      {/* If no tasks are available */}
       {tasks.length === 0 ? (
         <Typography variant="body2" color="textSecondary">
           {emptyMessage}
         </Typography>
       ) : (
         <>
-          {/* Task Table */}
           <TableContainer>
             <Table>
               <TableHead>
@@ -139,7 +135,6 @@ const TaskList = ({
             </Table>
           </TableContainer>
 
-          {/* Generate Report Button */}
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button 
               variant="contained" 

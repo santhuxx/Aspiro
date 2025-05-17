@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { Box, Button, TextField, Typography, Alert, Fade } from '@mui/material';
@@ -149,4 +148,3 @@ export default function SignIn() {
     </Box>
   );
 }
-

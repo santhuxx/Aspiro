@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Box, 
   TextField, 
@@ -15,38 +15,17 @@ import {
 import dayjs from 'dayjs';
 
 const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
-  // Use current date if selectedDate is not provided
-  const effectiveDate = selectedDate || dayjs();
-
-  // If editing, initialize with taskToEdit, else with empty fields
-  const [task, setTask] = useState({
-    title: '',
-    description: '',
-    priority: 'medium',
-    date: effectiveDate,
-    startTime: '',
-    endTime: ''
-  });
-
-  useEffect(() => {
-    if (taskToEdit) {
-      setTask({
-        ...taskToEdit,
-        date: taskToEdit.date ? dayjs(taskToEdit.date) : effectiveDate,
-      });
-    } else {
-      setTask({
-        title: '',
-        description: '',
-        priority: 'medium',
-        date: effectiveDate,
-        startTime: '',
-        endTime: ''
-      });
+  const isEditing = !!taskToEdit;
+  const [task, setTask] = useState(
+    taskToEdit || {
+      title: '',
+      description: '',
+      priority: 'medium',
+      date: selectedDate,
+      startTime: '',
+      endTime: ''
     }
-    // eslint-disable-next-line
-  }, [taskToEdit, open, selectedDate]);
-
+  );
   const [error, setError] = useState({ startTime: '', endTime: '' });
 
   const handleChange = (e) => {
@@ -58,28 +37,49 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    console.log("TaskForm submit:", { task, selectedDate: selectedDate.format('YYYY-MM-DD') });
+
     const now = dayjs();
-    const isToday = effectiveDate.isSame(now, 'day');
+    const isToday = selectedDate.isSame(now, 'day');
 
-    if (isToday && task.startTime && dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.startTime}`).isBefore(now)) {
-      setError((prev) => ({ ...prev, startTime: 'Start time cannot be in the past.' }));
-      return;
+    // Validate start time
+    if (isToday && task.startTime) {
+      const startDateTime = dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.startTime}`, 'YYYY-MM-DDTHH:mm');
+      const timeDiff = startDateTime.diff(now, 'minute');
+      if (timeDiff < -5) { // Allow start time up to 5 minutes in the past
+        setError((prev) => ({ ...prev, startTime: 'Start time cannot be more than 5 minutes in the past.' }));
+        console.log("Start time validation failed:", { 
+          startTime: task.startTime, 
+          now: now.format('HH:mm'), 
+          timeDiff 
+        });
+        return;
+      }
     }
 
-    if (task.endTime && task.startTime && dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.endTime}`).isBefore(dayjs(`${effectiveDate.format('YYYY-MM-DD')}T${task.startTime}`))) {
-      setError((prev) => ({ ...prev, endTime: 'End time cannot be earlier than start time.' }));
-      return;
+    // Validate end time
+    if (task.startTime && task.endTime) {
+      const startDateTime = dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.startTime}`, 'YYYY-MM-DDTHH:mm');
+      const endDateTime = dayjs(`${selectedDate.format('YYYY-MM-DD')}T${task.endTime}`, 'YYYY-MM-DDTHH:mm');
+      if (endDateTime.isBefore(startDateTime)) {
+        setError((prev) => ({ ...prev, endTime: 'End time must be after start time.' }));
+        console.log("End time validation failed:", { startTime: task.startTime, endTime: task.endTime });
+        return;
+      }
     }
 
+    console.log("TaskForm validation passed, submitting:", task);
     onSubmit(task);
-    setTask({
-      title: '',
-      description: '',
-      priority: 'medium',
-      date: effectiveDate,
-      startTime: '',
-      endTime: ''
-    });
+    if (!isEditing) {
+      setTask({
+        title: '',
+        description: '',
+        priority: 'medium',
+        date: selectedDate,
+        startTime: '',
+        endTime: ''
+      });
+    }
     onClose();
   };
 
@@ -97,7 +97,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
         borderRadius: 2
       }}>
         <Typography variant="h6" gutterBottom>
-          {taskToEdit ? 'Edit Task' : 'Add New Task'} {effectiveDate.format('MMMM D, YYYY')}
+          {isEditing ? 'Edit Task' : 'Add New Task'} {selectedDate?.format('MMMM D, YYYY')}
         </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -120,16 +120,16 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
             rows={4}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel>Add Priority</InputLabel>
+            <InputLabel>Priority</InputLabel>
             <Select
               name="priority"
               value={task.priority}
               onChange={handleChange}
               label="Priority"
             >
-              <MenuItem value="low">Low </MenuItem>
-              <MenuItem value="medium">Medium </MenuItem>
-              <MenuItem value="high">High </MenuItem>
+              <MenuItem value="low">Low</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="high">High</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -165,7 +165,7 @@ const TaskForm = ({ open, onClose, onSubmit, selectedDate, taskToEdit }) => {
               Cancel
             </Button>
             <Button type="submit" variant="contained" color="primary">
-              {taskToEdit ? 'Update Task' : 'Add Task'}
+              {isEditing ? 'Update Task' : 'Add Task'}
             </Button>
           </Box>
         </form>

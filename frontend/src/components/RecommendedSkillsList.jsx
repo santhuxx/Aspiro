@@ -1,6 +1,5 @@
-"use client";
-
-import React, { useState } from "react";
+'use client';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -13,59 +12,117 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  CircularProgress,
+  Alert
 } from "@mui/material";
 import { ArrowForward, RemoveCircle } from "@mui/icons-material";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebase";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 const RecommendedSkillsList = () => {
+  const { currentUser, loading: authLoading } = useAuth();
+  const [skills, setSkills] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const skills = [
-    {
-      name: "JavaScript",
-      courses: [
-        "JavaScript Basics - Codecademy",
-        "Modern JavaScript from the Beginning - Udemy",
-      ],
-      youtube: [
-        "https://www.youtube.com/watch?v=W6NZfCO5SIk",
-        "https://www.youtube.com/watch?v=PkZNo7MFNFg",
-      ],
-    },
-    {
-      name: "React",
-      courses: [
-        "React for Beginners - Scrimba",
-        "The Complete React Guide - Udemy",
-      ],
-      youtube: [
-        "https://www.youtube.com/watch?v=Ke90Tje7VS0",
-        "https://www.youtube.com/watch?v=bMknfKXIFA8",
-      ],
-    },
-    {
-      name: "Node.js",
-      courses: [
-        "Node.js Basics - Udemy",
-        "The Complete Node.js Developer Course - Udemy",
-      ],
-      youtube: [
-        "https://www.youtube.com/watch?v=TlB_eWDSMt4",
-        "https://www.youtube.com/watch?v=fBNz5xF-Kx4",
-      ],
-    },
-    {
-      name: "MongoDB",
-      courses: [
-        "MongoDB Basics - MongoDB University",
-        "Master MongoDB - Udemy",
-      ],
-      youtube: [
-        "https://www.youtube.com/watch?v=FwMwO8pXfq0",
-        "https://www.youtube.com/watch?v=oSIv-E60NiU",
-      ],
-    },
-  ];
+  const GEMINI_API_KEY = "AIzaSyCk_vpgdzjOAOhozrJZXb9s3nsn1DUloqA";
+
+  // Fetch suggested skills
+  useEffect(() => {
+    const fetchSkillSuggestions = async (email) => {
+      setLoading(true);
+      setError("");
+      try {
+        console.log("Fetching suggestions for email:", email);
+        const skillsDoc = await getDoc(doc(db, "userSkills", email));
+        const finalJobDoc = await getDoc(doc(db, "finalJobDecisions", email));
+
+        console.log("RecommendedSkillsList Firestore fetch:", {
+          skillsDoc: skillsDoc.exists() ? skillsDoc.data() : "Not found",
+          finalJobDoc: finalJobDoc.exists() ? finalJobDoc.data() : "Not found"
+        });
+
+        const userSkills = skillsDoc.exists()
+          ? { techSkills: skillsDoc.data().techSkills || [], softSkills: skillsDoc.data().softSkills || [] }
+          : { techSkills: [], softSkills: [] };
+        const finalJob = finalJobDoc.exists() ? finalJobDoc.data().finalJob || "Not specified" : "Not specified";
+
+        if (finalJob === "Not specified") {
+          throw new Error("No final job decision found. Please select a job in Job Match Result.");
+        }
+
+        const response = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `Act as a career advisor. Given a user's current skills and their chosen future job, suggest up to 10 skills (technical or soft) they should acquire to be better prepared for the job. Return only a valid JSON object with fields: { job: string, suggestedSkills: array of strings, explanation: string }.\nJob: ${finalJob}\nCurrent Skills: ${JSON.stringify(userSkills)}`
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log("Gemini API raw response:", response.data);
+        const resultText = response.data.candidates[0].content.parts[0].text;
+        let suggestionResult;
+        try {
+          const jsonMatch = resultText.match(/{[\s\S]*}/);
+          if (!jsonMatch) {
+            throw new Error("No valid JSON found in response");
+          }
+          suggestionResult = JSON.parse(jsonMatch[0]);
+          console.log("Parsed suggestions:", suggestionResult);
+        } catch (parseError) {
+          console.error("Failed to parse skill suggestion JSON:", parseError, "Raw text:", resultText);
+          throw new Error("Failed to parse API response");
+        }
+
+        // Transform suggestedSkills into skills array with placeholder resources
+        const transformedSkills = suggestionResult.suggestedSkills.map(skill => ({
+          name: skill,
+          courses: [
+            `${skill} Fundamentals - Udemy`,
+            `Learn ${skill} - Coursera`
+          ],
+          youtube: [
+            `https://www.youtube.com/results?search_query=${encodeURIComponent(skill + " tutorial")}`,
+            `https://www.youtube.com/results?search_query=${encodeURIComponent(skill + " beginner guide")}`
+          ]
+        }));
+
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error("Error fetching skill suggestions:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+        setError(error.message || "Failed to fetch skill suggestions. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    console.log("RecommendedSkillsList auth state:", { authLoading, currentUser: currentUser?.email || "null" });
+    if (!authLoading && currentUser) {
+      fetchSkillSuggestions(currentUser.email);
+    } else if (!authLoading && !currentUser) {
+      setError("Please log in to view recommended skills.");
+    }
+  }, [authLoading, currentUser]);
 
   const handleOpen = (skill) => {
     setSelectedSkill(skill);
@@ -76,6 +133,50 @@ const RecommendedSkillsList = () => {
     setOpen(false);
     setSelectedSkill(null);
   };
+
+  const handleRemoveSkill = async (index) => {
+    if (!currentUser) {
+      setError("Please log in to remove skills.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const updatedSkills = skills.filter((_, i) => i !== index);
+      setSkills(updatedSkills);
+
+      // Optionally save removed skills to Firestore (e.g., as ignored skills)
+      const docRef = doc(db, "userPreferences", currentUser.email);
+      await setDoc(docRef, {
+        ignoredSkills: skills[index].name,
+        timestamp: new Date().toISOString()
+      }, { merge: true });
+
+      console.log("Skill removed and saved to Firestore:", updatedSkills);
+    } catch (err) {
+      console.error("Error removing skill:", err);
+      setError("Failed to remove skill. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, maxWidth: "500px", mx: "auto" }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -95,7 +196,7 @@ const RecommendedSkillsList = () => {
           <ListItem
             key={index}
             sx={{
-              color: "black",  
+              color: "black",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -103,22 +204,17 @@ const RecommendedSkillsList = () => {
               paddingY: 1,
             }}
           >
-            <ListItemText primaryTypographyProps={{ variant:"h8"}} primary={skill.name} sx={{ flexGrow: 1 }} />
-
-            {/* Show Recommended Courses */}
-            <IconButton color="primary" onClick={() => handleOpen(skill)}>
+            <ListItemText primaryTypographyProps={{ variant: "h8" }} primary={skill.name} sx={{ flexGrow: 1 }} />
+            <IconButton color="primary" onClick={() => handleOpen(skill)} disabled={loading}>
               <ArrowForward />
             </IconButton>
-
-            {/* Remove Skill (UI Only) */}
-            <IconButton color="error">
+            <IconButton color="error" onClick={() => handleRemoveSkill(index)} disabled={loading}>
               <RemoveCircle />
             </IconButton>
           </ListItem>
         ))}
       </List>
 
-      {/* Dialog Box for Recommendations */}
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Recommended Learning Resources</DialogTitle>
         <DialogContent>
@@ -156,4 +252,4 @@ const RecommendedSkillsList = () => {
   );
 };
 
-export default RecommendedSkillsList
+export default RecommendedSkillsList;
